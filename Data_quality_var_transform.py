@@ -6,8 +6,6 @@ import warnings
 import seaborn as sns
 import math
 import tensorflow as tf
-import keras
-from sklearn.preprocessing import StandardScaler
 
 warnings.simplefilter("ignore", FutureWarning)
 warnings.simplefilter("ignore", pd.errors.SettingWithCopyWarning)
@@ -16,6 +14,14 @@ rcParams["font.serif"] = ["Times New Roman"]
 dataset = pd.read_csv("train.csv")
 test_dataset = pd.read_csv("test.csv")
 drop_label = ["features_duration_ms", "n_beats", "n_bars", "energy"]
+plotting = True
+
+
+def processing_df():
+    mode_rep()
+    time_sig_rep()
+    tempo_rep()
+    autoencoder_NN()
 
 
 def missing_bar():
@@ -40,6 +46,8 @@ def missing_heatmap():
     for i in dataset.index:
         if dataset["time_signature"].iloc[i] == 0:
             dataset["time_signature"].iloc[i] = np.NaN
+        if dataset["tempo"].iloc[i] == 0:
+            dataset["tempo"].iloc[i] = np.NaN
     colours = ["#fbbd3c", "#2574f4"]
     sns.heatmap(dataset[cols].isnull(), cmap=sns.color_palette(colours), yticklabels=False)
     plt.tight_layout()
@@ -54,10 +62,11 @@ def mode_rep():
     filling = dataset["mode"].value_counts(normalize=True)
     missing = dataset["mode"].isnull()
     dataset.loc[missing, "mode"] = np.random.choice(filling.index, size=len(dataset[missing]), p=filling.values)
-    ax2.bar(x=["0", "1"], height=dataset["mode"].value_counts(), color="#2574f4")
-    ax2.set_ylim(0, 10000)
-    ax2.set_title("After replacing")
-    plt.show()
+    if plotting is True:
+        ax2.bar(x=["0", "1"], height=dataset["mode"].value_counts(), color="#2574f4")
+        ax2.set_ylim(0, 10000)
+        ax2.set_title("After replacing")
+        plt.show()
 
 
 def time_sig_rep():
@@ -75,13 +84,22 @@ def time_sig_rep():
     missing = dataset["time_signature"].isnull()
     dataset.loc[missing, "time_signature"] = np.random.choice(filling.index,
                                                               size=len(dataset[missing]), p=filling.values)
-    val = dataset["time_signature"].value_counts()
-    val._set_value(2.0, 0)
-    val = val.reindex([1.0, 2.0, 3.0, 4.0, 5.0])
-    ax2.bar(x=["1", "2", "3", "4", "5"], height=val, color="#2574f4")
-    ax2.set_ylim(0, 14000)
-    ax2.set_title("After replacing")
-    plt.show()
+    if plotting is True:
+        val = dataset["time_signature"].value_counts()
+        val._set_value(2.0, 0)
+        val = val.reindex([1.0, 2.0, 3.0, 4.0, 5.0])
+        ax2.bar(x=["1", "2", "3", "4", "5"], height=val, color="#2574f4")
+        ax2.set_ylim(0, 14000)
+        ax2.set_title("After replacing")
+        plt.show()
+
+
+def tempo_rep():
+    mean = dataset["tempo"].mean()
+    std = dataset["tempo"].std()
+    for i in dataset.index:
+        if dataset["tempo"].iloc[i] == 0:
+            dataset["tempo"].iloc[i] = np.random.normal(loc=mean, scale=std, size=1)
 
 
 def duplicates():
@@ -117,7 +135,7 @@ def tempo_standardization():
 
 def autoencoder_NN():
     dataset.drop(columns=drop_label, inplace=True)
-    for feature in ["duration_ms", "loudness"]:
+    for feature in ["duration_ms", "loudness", "tempo"]:
         encoder = tf.keras.Sequential([
             tf.keras.layers.Dense(16, activation="relu"),
             tf.keras.layers.Dense(16, activation="relu"),
@@ -155,9 +173,10 @@ def autoencoder_NN():
              "reconstruction_error": reconstruction_error}
         )
         max_mae = np.percentile(a=df["reconstruction_error"], q=99.8)
-        sns.lineplot(df["x"])
-        sns.scatterplot(df["x"].loc[df["reconstruction_error"] > max_mae], color="r")
-        plt.xlabel("Object N°")
-        plt.ylabel("Loudness (dB)")
-        plt.title("Outlier loudness")
-        plt.show()
+        if plotting is True:
+            sns.lineplot(df["x"])
+            sns.scatterplot(df["x"].loc[df["reconstruction_error"] > max_mae], color="r")
+            plt.xlabel("Object N°")
+            plt.ylabel(feature)
+            plt.title(f"Outlier {feature}")
+            plt.show()
