@@ -13,7 +13,7 @@ rcParams["font.family"] = "serif"
 rcParams["font.serif"] = ["Times New Roman"]
 dataset = pd.read_csv("train.csv")
 test_dataset = pd.read_csv("test.csv")
-drop_label = ["features_duration_ms", "n_beats", "n_bars", "energy"]
+drop_label = ["features_duration_ms", "n_beats", "n_bars", "energy", "processing"]
 plotting = True
 
 
@@ -22,6 +22,7 @@ def processing_df():
     time_sig_rep()
     tempo_rep()
     autoencoder_NN()
+    var_transformation()
 
 
 def missing_bar():
@@ -173,6 +174,7 @@ def autoencoder_NN():
              "reconstruction_error": reconstruction_error}
         )
         max_mae = np.percentile(a=df["reconstruction_error"], q=99.8)
+        dataset.drop(df["x"].loc[df["reconstruction_error"] > max_mae].index, inplace=True)
         if plotting is True:
             sns.lineplot(df["x"])
             sns.scatterplot(df["x"].loc[df["reconstruction_error"] > max_mae], color="r")
@@ -180,3 +182,18 @@ def autoencoder_NN():
             plt.ylabel(feature)
             plt.title(f"Outlier {feature}")
             plt.show()
+
+
+def var_transformation():
+    # Transform genre in a categorical attribute (1-20)
+    ind = sorted(dataset["genre"].unique())
+    for i in range(len(ind)):
+        dataset["genre"].loc[dataset["genre"] == ind[i]] = i
+    # Transform bool in 0/1
+    for i in dataset.index:
+        if dataset["explicit"].iloc[i] is True:
+            dataset["explicit"].iloc[i] = 1
+        else:
+            dataset["explicit"].iloc[i] = 0
+    # Transform popularity in range 0.0-1.0
+    dataset["popularity"] = dataset["popularity"] / 100
