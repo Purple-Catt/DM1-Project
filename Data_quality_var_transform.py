@@ -14,15 +14,7 @@ rcParams["font.serif"] = ["Times New Roman"]
 dataset = pd.read_csv("train.csv")
 test_dataset = pd.read_csv("test.csv")
 drop_label = ["features_duration_ms", "n_beats", "n_bars", "energy", "processing"]
-plotting = True
-
-
-def processing_df():
-    mode_rep()
-    time_sig_rep()
-    tempo_rep()
-    autoencoder_NN()
-    var_transformation()
+plotting = False
 
 
 def missing_bar():
