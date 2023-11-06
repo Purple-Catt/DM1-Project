@@ -14,7 +14,7 @@ rcParams["font.serif"] = ["Times New Roman"]
 dataset = pd.read_csv("train.csv")
 test_dataset = pd.read_csv("test.csv")
 drop_label = ["features_duration_ms", "n_beats", "n_bars", "energy", "processing"]
-plotting = False
+plotting = True
 
 
 def missing_bar():
@@ -128,7 +128,7 @@ def tempo_standardization():
 
 def autoencoder_NN():
     dataset.drop(columns=drop_label, inplace=True)
-    for feature in ["duration_ms", "loudness", "tempo"]:
+    for feature in ["speechiness"]:
         encoder = tf.keras.Sequential([
             tf.keras.layers.Dense(16, activation="relu"),
             tf.keras.layers.Dense(16, activation="relu"),
@@ -174,7 +174,7 @@ def autoencoder_NN():
             plt.ylabel(feature)
             plt.title(f"Outlier {feature}")
             plt.show()
-
+        dataset.to_csv("df_aaa.csv")
 
 def var_transformation():
     # Transform genre in a categorical attribute (1-20)
@@ -189,3 +189,8 @@ def var_transformation():
             dataset["explicit"].iloc[i] = 0
     # Transform popularity in range 0.0-1.0
     dataset["popularity"] = dataset["popularity"] / 100
+    duration_mean = dataset["duration_ms"].mean()
+    duration_std = dataset["duration_ms"].std()
+    dataset["duration_ms"] = (dataset["duration_ms"] - duration_mean) / duration_std
+
+autoencoder_NN()
