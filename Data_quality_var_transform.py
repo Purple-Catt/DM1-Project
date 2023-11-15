@@ -176,6 +176,7 @@ def autoencoder_NN():
             plt.show()
         dataset.to_csv("df_aaa.csv")
 
+
 def var_transformation():
     # Transform genre in a categorical attribute (1-20)
     ind = sorted(dataset["genre"].unique())
@@ -192,5 +193,3 @@ def var_transformation():
     duration_mean = dataset["duration_ms"].mean()
     duration_std = dataset["duration_ms"].std()
     dataset["duration_ms"] = (dataset["duration_ms"] - duration_mean) / duration_std
-
-autoencoder_NN()
