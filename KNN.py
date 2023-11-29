@@ -1,23 +1,40 @@
 import pandas as pd
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
-import Data_quality_var_transform as dq
+from sklearn.model_selection import cross_validate, cross_val_score
+from sklearn.metrics import classification_report, confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+import sklearn
 import warnings
 
 warnings.simplefilter("ignore", pd.errors.SettingWithCopyWarning)
+warnings.simplefilter("ignore", sklearn.exceptions.UndefinedMetricWarning)
 
-train_raw = pd.read_csv("train.csv")
-dataset = pd.read_csv("df_cleaned.csv", index_col=0)
-cl_col = ["duration_ms", "popularity", "danceability", "loudness", "speechiness",
-          "acousticness", "instrumentalness", "liveness", "valence", "tempo", "genre"]
-train_df = dataset[cl_col].copy(deep=True)
-test_dataset = pd.read_csv("test.csv")
+train_df = pd.read_csv("TRAIN_DF.csv", index_col=0)
+test_df = pd.read_csv("TEST_DF.csv", index_col=0)
 
-duration = train_raw["duration_ms"].iloc[train_df.index]
-train_mean = duration.mean()
-train_std = duration.std()
-dq.var_transformation(duration_mean=train_mean, duration_std=train_std, dataset=test_dataset)
-test_df = test_dataset[cl_col].copy(deep=True)
+y_train = train_df.pop("genre")
+x_train = train_df.copy(deep=True)
+y_test = test_df.pop("genre")
+x_test = test_df.copy(deep=True)
+"""
+for n in [121]:
+    knn = KNeighborsClassifier(n_neighbors=n, metric="euclidean")
+    knn.fit(x_train, y_train)
+    y_pred = knn.predict(x_test)
+    cf = confusion_matrix(y_test, y_pred)
+    sns.heatmap(cf, annot=True, cmap="Greens")
+    plt.xlabel("True")
+    plt.ylabel("Predicted")
+    plt.show()
+    """
 
-train_df.to_csv("TRAIN_DF.csv")
-test_df.to_csv("TEST_DF.csv")
+
+def cross_val():
+    knn = KNeighborsClassifier(n_neighbors=121, metric="euclidean")
+    cross_v = cross_validate(estimator=knn, X=x_train, y=y_train, cv=5)
+    print(cross_v)
+
+
+cross_val()

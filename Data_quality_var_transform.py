@@ -47,7 +47,7 @@ def missing_heatmap():
     plt.show()
 
 
-def mode_rep():
+def mode_rep(dataset):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
     ax1.bar(x=["0", "1"], height=dataset["mode"].value_counts(), color="#fbbd3c")
     ax1.set_ylim(0, 10000)
@@ -87,7 +87,7 @@ def time_sig_rep():
         plt.show()
 
 
-def tempo_rep():
+def tempo_rep(dataset):
     mean = dataset["tempo"].mean()
     std = dataset["tempo"].std()
     for i in dataset.index:
