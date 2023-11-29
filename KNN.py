@@ -18,7 +18,7 @@ y_train = train_df.pop("genre")
 x_train = train_df.copy(deep=True)
 y_test = test_df.pop("genre")
 x_test = test_df.copy(deep=True)
-"""
+
 for n in [121]:
     knn = KNeighborsClassifier(n_neighbors=n, metric="euclidean")
     knn.fit(x_train, y_train)
@@ -28,13 +28,9 @@ for n in [121]:
     plt.xlabel("True")
     plt.ylabel("Predicted")
     plt.show()
-    """
 
 
 def cross_val():
     knn = KNeighborsClassifier(n_neighbors=121, metric="euclidean")
     cross_v = cross_validate(estimator=knn, X=x_train, y=y_train, cv=5)
     print(cross_v)
-
-
-cross_val()
