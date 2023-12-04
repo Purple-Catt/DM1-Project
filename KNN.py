@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import cross_val_score, RepeatedStratifiedKFold, GridSearchCV
-from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
-from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, RocCurveDisplay
+from sklearn.preprocessing import StandardScaler, LabelBinarizer
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 import seaborn as sns
@@ -16,6 +16,8 @@ rcParams["font.family"] = "serif"
 rcParams["font.serif"] = ["Times New Roman"]
 scale = True
 plot = False
+save = False
+which = 2
 scores = []
 
 train_df = pd.read_csv("TRAIN_DF.csv", index_col=0)
@@ -45,12 +47,69 @@ def knn_eval():
         plt.ylabel("Predicted")
         plt.tight_layout()
         plt.show()
-    pd.DataFrame.from_dict(
-        classification_report(y_test, y_test_pred, output_dict=True)
-    ).transpose().to_csv("class_report_test.csv")
-    pd.DataFrame.from_dict(
-        classification_report(y_train, y_train_pred, output_dict=True)
-    ).transpose().to_csv("class_report_train.csv")
+
+    if save:
+        pd.DataFrame.from_dict(
+            classification_report(y_test, y_test_pred, output_dict=True)
+        ).transpose().to_csv("class_report_test.csv")
+        pd.DataFrame.from_dict(
+            classification_report(y_train, y_train_pred, output_dict=True)
+        ).transpose().to_csv("class_report_train.csv")
+
+    lb = LabelBinarizer()
+    lb.fit(y_train)
+    y_test_bin = lb.transform(y_test)
+    class_of_interest = 18
+    class_id = np.flatnonzero(lb.classes_ == class_of_interest)[0]
+    y_test_prob = knn.predict_proba(x_test)
+
+    if which == 0:
+        RocCurveDisplay.from_predictions(
+            y_test_bin[:, class_id],
+            y_test_prob[:, class_id],
+            name=f"{class_of_interest} vs the rest",
+            color="darkorange",
+            plot_chance_level=True,
+        )
+        plt.axis("square")
+        plt.xlabel("False Positive Rate")
+        plt.ylabel("True Positive Rate")
+        plt.title("One-vs-Rest ROC curves")
+        plt.legend()
+        plt.show()
+
+    elif which == 1:
+        fig, ax = plt.subplots(figsize=(6, 6))
+        for class_id in range(0, 20):
+            RocCurveDisplay.from_predictions(
+                y_test_bin[:, class_id],
+                y_test_prob[:, class_id],
+                name=f"ROC curve for {class_id}",
+                ax=ax,
+                plot_chance_level=(class_id == 2),
+            )
+
+        plt.axis("square")
+        plt.xlabel("False Positive Rate")
+        plt.ylabel("True Positive Rate")
+        plt.title("Extension of Receiver Operating Characteristic\nto One-vs-Rest multiclass")
+        plt.legend()
+        plt.show()
+
+    elif which == 2:
+        RocCurveDisplay.from_predictions(
+            y_test_bin.ravel(),
+            y_test_prob.ravel(),
+            name="micro-average OvR",
+            color="darkorange",
+            plot_chance_level=True,
+        )
+        plt.axis("square")
+        plt.xlabel("False Positive Rate")
+        plt.ylabel("True Positive Rate")
+        plt.title("KNN\nMicro-averaged One-vs-Rest ROC")
+        plt.legend()
+        plt.show()
 
 
 def cross_val():
@@ -92,3 +151,6 @@ def gridsearch():
         data=results, x="param_n_neighbors", y="mean_test_score", hue="metric_weight"
     )
     plt.show()
+
+
+knn_eval()
