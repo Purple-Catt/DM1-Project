@@ -15,10 +15,10 @@ warnings.simplefilter("ignore", sklearn.exceptions.UndefinedMetricWarning)
 rcParams["font.family"] = "serif"
 rcParams["font.serif"] = ["Times New Roman"]
 scale = True
-plot = False
+plot = True
 save = False
 which = 2
-scores = []
+#scores = []
 
 train_df = pd.read_csv("TRAIN_DF.csv", index_col=0)
 test_df = pd.read_csv("TEST_DF.csv", index_col=0)
@@ -138,9 +138,22 @@ def gridsearch():
 
 
 def cross_val():
+    scores = {}  # Initialize an empty dictionary to store the scores
     for n in range(80, 200, 10):
         dt = DecisionTreeClassifier()
         cross_v = cross_val_score(estimator=dt, X=x_train, y=y_train, cv=5)
-        scores[n] = cross_v.mean()
+        scores[str(n)] = cross_v.mean()  # Use string keys instead of integer keys
 
-gridsearch()
+    # Perform grid search
+    gridsearch()
+
+    # Print classification report
+    dt_best = DecisionTreeClassifier()  # Replace with your best estimator from grid search
+    dt_best.fit(x_train, y_train)
+    y_pred = dt_best.predict(x_test)
+    report = classification_report(y_test, y_pred, digits=4)  # Set digits parameter to 4
+    print(report)
+
+cross_val()
+
+#gridsearch()
