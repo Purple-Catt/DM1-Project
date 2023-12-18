@@ -21,8 +21,8 @@ save = False
 which = 2
 #scores = []
 
-train_df = pd.read_csv("TRAIN_DF.csv", index_col=0)
-test_df = pd.read_csv("TEST_DF.csv", index_col=0)
+train_df = pd.read_csv("Datasets/TRAIN_DF.csv", index_col=0)
+test_df = pd.read_csv("Datasets/TEST_DF.csv", index_col=0)
 
 y_train = train_df.pop("genre")
 y_test = test_df.pop("genre")
